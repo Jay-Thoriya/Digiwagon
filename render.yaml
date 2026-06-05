@@ -12,7 +12,7 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false # set this secret in the Render dashboard
       - key: LLM_MODEL_NAME
-        value: meta-llama/llama-3.3-70b-instruct:free
+        value: openai/gpt-oss-120b:free
       - key: EMBEDDING_BACKEND
         value: fastembed
       - key: ALLOWED_ORIGINS

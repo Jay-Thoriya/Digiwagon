@@ -89,6 +89,4 @@ export const api = {
   runAgent: () => request<AgentReport>("/agent/run", { method: "POST" }),
 
   getAgentReport: () => request<AgentReport>("/agent/report"),
-
-  getAgentReports: () => request<AgentReport[]>("/agent/reports"),
 };

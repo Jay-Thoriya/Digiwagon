@@ -12,26 +12,19 @@ import { PageHeader } from "@/components/ui";
 
 export default function AgentPage() {
   const [report, setReport] = useState<AgentReport | null>(null);
-  const [history, setHistory] = useState<AgentReport[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Show the previous report + history when the page loads.
+  // Show the previous report when the page loads (if one exists).
   useEffect(() => {
     api.getAgentReport().then(setReport).catch(() => {});
-    refreshHistory();
   }, []);
-
-  function refreshHistory() {
-    api.getAgentReports().then(setHistory).catch(() => {});
-  }
 
   async function run() {
     setLoading(true);
     setError("");
     try {
       setReport(await api.runAgent());
-      refreshHistory();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -89,24 +82,6 @@ export default function AgentPage() {
           </div>
 
           <CardList title="Recommendations" items={report.recommendations} tone="accent" />
-
-          {history.length > 1 && (
-            <div className="card card-hover">
-              <h2 className="mb-3 font-medium text-white">Report history</h2>
-              <ul className="divide-y divide-edge/60 text-sm">
-                {history.map((r, i) => (
-                  <li key={i} className="flex items-center justify-between py-2">
-                    <span className="text-slate-400">
-                      {new Date(r.report_saved_at).toLocaleString()}
-                    </span>
-                    <span className="font-medium" style={{ color: scoreColor(r.health_score) }}>
-                      {r.health_score}/100
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
 
           <p className="text-right text-xs text-slate-500">
             Generated at {new Date(report.report_saved_at).toLocaleString()}

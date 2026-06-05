@@ -158,8 +158,3 @@ def agent_report(db: Session = Depends(get_db)):
     if report is None:
         raise HTTPException(status_code=404, detail="No report has been generated yet.")
     return report
-
-
-@router.get("/agent/reports", response_model=list[schemas.AgentReportOut], tags=["Part 3"])
-def agent_reports(db: Session = Depends(get_db)):
-    return agent.get_report_history(db)

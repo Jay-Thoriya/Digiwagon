@@ -89,6 +89,8 @@ def store_report(db: Session, report: dict) -> str:
     with open(settings.agent_report_path, "w", encoding="utf-8") as f:
         json.dump({**report, "report_saved_at": saved_at}, f, indent=2)
 
+    # Only the latest report is retained (per spec) - drop previous rows.
+    db.query(AgentReport).delete()
     db.add(
         AgentReport(
             executive_summary=report["executive_summary"],
@@ -141,8 +143,3 @@ def _to_dict(report: AgentReport) -> dict:
 def get_latest_report(db: Session) -> dict | None:
     report = db.query(AgentReport).order_by(AgentReport.created_at.desc()).first()
     return _to_dict(report) if report else None
-
-
-def get_report_history(db: Session, limit: int = 10) -> list[dict]:
-    rows = db.query(AgentReport).order_by(AgentReport.created_at.desc()).limit(limit).all()
-    return [_to_dict(r) for r in rows]
