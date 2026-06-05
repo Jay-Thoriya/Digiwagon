@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.db
+faiss_index.bin
+faiss_index.bin.ids.npy
+agent_report.json
+.pytest_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# Env files (never commit real secrets)
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

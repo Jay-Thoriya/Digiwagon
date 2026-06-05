@@ -1,0 +1,19 @@
+# One-click Render deployment for the backend.
+# In the Render dashboard: New > Blueprint, point it at this repo.
+services:
+  - type: web
+    name: smart-review-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false # set this secret in the Render dashboard
+      - key: LLM_MODEL_NAME
+        value: meta-llama/llama-3.3-70b-instruct:free
+      - key: EMBEDDING_BACKEND
+        value: fastembed
+      - key: ALLOWED_ORIGINS
+        value: "*" # tighten to your Vercel URL after deploying the frontend

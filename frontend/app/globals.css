@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-ink text-slate-200;
+  /* A soft glow at the top so the page doesn't read as flat black. */
+  background-image: radial-gradient(
+    900px circle at 50% -10%,
+    rgba(91, 140, 255, 0.12),
+    transparent 60%
+  );
+  background-attachment: fixed;
+}
+
+/* Entrance + motion. Kept as plain CSS keyframes so there are no extra
+   dependencies and it works the same in dev and on Vercel. */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-edge bg-panel p-6 transition duration-200;
+  }
+  /* Gentle lift on hover - subtle, not bouncy. */
+  .card-hover {
+    @apply hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-xl hover:shadow-black/30;
+  }
+  /* Fade/slide each section in. Pair with an inline animation-delay to stagger. */
+  .rise {
+    animation: fadeInUp 0.5s ease both;
+  }
+
+  .badge {
+    @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-positive {
+    @apply bg-emerald-500/15 text-emerald-300;
+  }
+  .badge-negative {
+    @apply bg-rose-500/15 text-rose-300;
+  }
+  .badge-neutral {
+    @apply bg-slate-500/20 text-slate-300;
+  }
+}
