@@ -17,7 +17,7 @@ export default function Nav() {
     <header className="sticky top-0 z-10 border-b border-edge bg-panel/70 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl items-center gap-1 px-5 py-3.5">
         <span className="mr-5 text-lg font-semibold text-white">
-          VoC-<span className="text-accent">Insight Engine</span>
+          Review<span className="text-accent">Lens</span>
         </span>
         {LINKS.map((link) => {
           const active = pathname === link.href;

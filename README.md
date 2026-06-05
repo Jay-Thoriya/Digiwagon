@@ -12,11 +12,9 @@ a business-insight report.
 
 | | URL |
 |---|---|
-| **Frontend (Vercel)** | _add your Vercel URL here_ |
-| **Backend API (Render)** | _add your Render URL here_ |
-| **API docs (Swagger)** | `<backend-url>/docs` |
-
-![Dashboard screenshot](docs/dashboard.png)
+| **Frontend (Vercel)** | https://smart-review-beta.vercel.app |
+| **Backend API (Render)** | https://smart-review-api-l9rd.onrender.com |
+| **API docs (Swagger)** | https://smart-review-api-l9rd.onrender.com/docs# |
 
 ---
 
@@ -141,32 +139,6 @@ Full request/response examples are in the interactive docs at `<backend-url>/doc
 | `ALLOWED_ORIGINS` | `http://localhost:3000` | Comma-separated CORS origins (your Vercel URL in prod) |
 
 Frontend uses a single variable: `NEXT_PUBLIC_API_URL`.
-
----
-
-## Deploying (free)
-
-Deploy the backend first so you have its URL for the frontend.
-
-### Backend → Render (free)
-
-1. Push this repo to GitHub.
-2. Render → **New → Blueprint**, pick the repo (it reads `backend/render.yaml`).
-3. Set `OPENROUTER_API_KEY` and `ALLOWED_ORIGINS` (your Vercel URL) in the dashboard.
-4. Deploy. You get a URL like `https://smart-review-api.onrender.com`.
-
-The blueprint uses `EMBEDDING_BACKEND=fastembed`, which keeps memory under the
-512MB free-tier limit (sentence-transformers pulls in torch and is too heavy there).
-
-> Render's free tier sleeps after inactivity, so the first request after idle
-> takes a few seconds to wake up.
-
-### Frontend → Vercel (free)
-
-1. Vercel → **Add New → Project**, import the repo.
-2. Set **Root Directory** to `frontend`.
-3. Add env var `NEXT_PUBLIC_API_URL` = your Render backend URL.
-4. Deploy. Then update the backend's `ALLOWED_ORIGINS` to the Vercel URL.
 
 ---
 

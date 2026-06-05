@@ -3,7 +3,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 
 export const metadata: Metadata = {
-  title: "VoC-Insight Engine",
+  title: "ReviewLens",
   description: "Sentiment analysis, semantic search and AI insight reports.",
 };
 
