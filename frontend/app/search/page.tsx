@@ -50,12 +50,12 @@ export default function SearchPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="e.g. Which reviews mention delayed delivery?"
-          className="flex-1 rounded-lg border border-edge bg-panel px-4 py-2.5 text-slate-200 outline-none focus:border-accent"
+          className="input-base flex-1"
         />
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-accent px-5 py-2.5 font-medium text-white transition hover:bg-accent/90 disabled:opacity-50"
+          className="btn-primary"
         >
           {loading ? "Searching…" : "Search"}
         </button>
@@ -69,7 +69,7 @@ export default function SearchPage() {
               setQuery(ex);
               runSearch(ex);
             }}
-            className="rounded-full border border-edge px-3 py-1 text-xs text-slate-400 hover:border-accent hover:text-accent"
+            className="rounded-full border border-edge bg-white px-3.5 py-1.5 text-xs text-stone-500 shadow-soft transition hover:border-amber-300 hover:bg-accent-light hover:text-amber-800"
           >
             {ex}
           </button>
@@ -77,21 +77,21 @@ export default function SearchPage() {
       </div>
 
       {error && (
-        <div className="card border-rose-500/40 text-rose-300">{error}</div>
+        <div className="card border-red-200 bg-red-50 text-red-700">{error}</div>
       )}
 
       {result && (
         <div className="space-y-4 rise">
           <div className="card card-hover">
-            <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-slate-400">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-400">
               Answer
             </h2>
-            <p className="leading-relaxed text-slate-100">{result.answer}</p>
+            <p className="leading-relaxed text-stone-800">{result.answer}</p>
             {result.source_review_ids.length > 0 && (
-              <p className="mt-3 text-sm text-slate-400">
+              <p className="mt-3 text-sm text-stone-500">
                 Sources:{" "}
                 {result.source_review_ids.map((id) => (
-                  <span key={id} className="badge mr-1 bg-accent/10 text-accent">
+                  <span key={id} className="badge mr-1 bg-accent-light text-amber-800 ring-1 ring-amber-200">
                     review {id}
                   </span>
                 ))}
@@ -101,14 +101,14 @@ export default function SearchPage() {
 
           {result.retrieved_reviews.length > 0 && (
             <div className="card card-hover">
-              <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-400">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-400">
                 Retrieved reviews
               </h2>
               <ul className="space-y-2">
                 {result.retrieved_reviews.map((r) => (
-                  <li key={r.id} className="rounded-lg border border-edge/60 p-3">
-                    <span className="mr-2 text-slate-500">#{r.id}</span>
-                    <span className="text-slate-200">{r.review}</span>
+                  <li key={r.id} className="rounded-xl border border-edge bg-stone-50/60 p-3.5 transition hover:bg-stone-50">
+                    <span className="mr-2 font-medium text-stone-400">#{r.id}</span>
+                    <span className="text-stone-700">{r.review}</span>
                   </li>
                 ))}
               </ul>

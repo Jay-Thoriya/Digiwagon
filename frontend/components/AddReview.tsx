@@ -43,45 +43,45 @@ export default function AddReview({ onAdded }: { onAdded: () => void }) {
   }
 
   return (
-    <div className="card card-hover space-y-3">
-      <h2 className="text-lg font-medium text-white">Try it — analyse a review</h2>
+    <div className="card card-hover space-y-4">
+      <h2 className="text-lg font-semibold text-stone-800">Try it — analyse a review</h2>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={3}
         placeholder="e.g. The delivery was quick but the box was damaged on arrival."
-        className="w-full resize-none rounded-lg border border-edge bg-ink px-3 py-2 text-slate-200 outline-none focus:border-accent"
+        className="input-base w-full resize-none"
       />
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <button
           onClick={analyze}
           disabled={busy || !text.trim()}
-          className="rounded-lg border border-edge px-4 py-2 text-sm text-slate-200 transition hover:border-accent disabled:opacity-50"
+          className="btn-secondary"
         >
           Analyse
         </button>
         <button
           onClick={save}
           disabled={busy || !text.trim()}
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent/90 disabled:opacity-50"
+          className="btn-primary"
         >
           Add to dataset
         </button>
-        {note && <span className="text-sm text-slate-400">{note}</span>}
+        {note && <span className="text-sm text-stone-500">{note}</span>}
       </div>
 
       {preview && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-edge/60 bg-ink/60 px-3 py-2 text-sm">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-edge bg-stone-50 px-4 py-3 text-sm">
           <SentimentBadge sentiment={preview.sentiment} />
-          <span className="text-slate-400">
+          <span className="text-stone-500">
             confidence {preview.confidence.toFixed(2)}
           </span>
           {preview.categories.map((c) => (
-            <span key={c} className="badge bg-accent/10 text-accent">{c}</span>
+            <span key={c} className="badge bg-accent-light text-amber-800 ring-1 ring-amber-200">{c}</span>
           ))}
           {preview.categories.length === 0 && (
-            <span className="text-slate-500">no categories matched</span>
+            <span className="text-stone-400">no categories matched</span>
           )}
         </div>
       )}

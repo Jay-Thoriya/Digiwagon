@@ -16,27 +16,25 @@ import { api, Summary } from "@/lib/api";
 import { ErrorBox, PageHeader } from "@/components/ui";
 
 const SENTIMENT_COLORS: Record<string, string> = {
-  positive: "#34d399",
-  negative: "#fb7185",
-  neutral: "#94a3b8",
+  positive: "#16A34A",
+  negative: "#DC2626",
+  neutral: "#9CA3AF",
 };
 
-// Shared tooltip for both charts: a colored dot + readable light text.
-// (The recharts default colours the label by slice, which reads as muddy on
-// a dark panel.) Works for the pie (name + fill) and the bar (category).
+// Light-mode tooltip: white card with warm shadow.
 function ChartTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const point = payload[0];
   const label = point.payload?.category ?? point.name;
-  const color = point.payload?.fill ?? "#5b8cff";
+  const color = point.payload?.fill ?? "#D97706";
   return (
-    <div className="rounded-lg border border-edge bg-[#0f1420] px-3 py-2 text-sm shadow-xl shadow-black/40">
+    <div className="rounded-xl border border-edge bg-white px-4 py-2.5 text-sm shadow-card-hover">
       <span
         className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
         style={{ background: color }}
       />
-      <span className="capitalize text-slate-200">{label}</span>
-      <span className="ml-2 font-semibold text-white">{point.value}</span>
+      <span className="capitalize text-stone-700">{label}</span>
+      <span className="ml-2 font-bold text-stone-900">{point.value}</span>
     </div>
   );
 }
@@ -50,7 +48,7 @@ export default function Dashboard() {
   }, []);
 
   if (error) return <ErrorBox message={error} />;
-  if (!summary) return <p className="text-slate-400">Loading dashboard…</p>;
+  if (!summary) return <p className="text-stone-400">Loading dashboard…</p>;
 
   const sentimentData = Object.entries(summary.sentiment_breakdown).map(
     ([name, value]) => ({ name, value })
@@ -63,15 +61,15 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label="Total reviews" value={summary.total_reviews} color="#5b8cff" delay={0} />
-        <Stat label="Positive" value={summary.sentiment_breakdown.positive ?? 0} color="#34d399" delay={60} />
-        <Stat label="Negative" value={summary.sentiment_breakdown.negative ?? 0} color="#fb7185" delay={120} />
-        <Stat label="Neutral" value={summary.sentiment_breakdown.neutral ?? 0} color="#94a3b8" delay={180} />
+        <Stat label="Total reviews" value={summary.total_reviews} color="#D97706" delay={0} />
+        <Stat label="Positive" value={summary.sentiment_breakdown.positive ?? 0} color="#16A34A" delay={60} />
+        <Stat label="Negative" value={summary.sentiment_breakdown.negative ?? 0} color="#DC2626" delay={120} />
+        <Stat label="Neutral" value={summary.sentiment_breakdown.neutral ?? 0} color="#9CA3AF" delay={180} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card card-hover rise" style={{ animationDelay: "240ms" }}>
-          <h2 className="mb-4 text-lg font-medium text-white">Sentiment breakdown</h2>
+          <h2 className="mb-4 text-lg font-semibold text-stone-800">Sentiment breakdown</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -83,7 +81,7 @@ export default function Dashboard() {
                 paddingAngle={3}
               >
                 {sentimentData.map((entry) => (
-                  <Cell key={entry.name} fill={SENTIMENT_COLORS[entry.name] ?? "#64748b"} />
+                  <Cell key={entry.name} fill={SENTIMENT_COLORS[entry.name] ?? "#D4D4D4"} />
                 ))}
               </Pie>
               <Tooltip content={<ChartTooltip />} />
@@ -93,19 +91,19 @@ export default function Dashboard() {
         </div>
 
         <div className="card card-hover rise" style={{ animationDelay: "300ms" }}>
-          <h2 className="mb-4 text-lg font-medium text-white">Top categories</h2>
+          <h2 className="mb-4 text-lg font-semibold text-stone-800">Top categories</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={summary.top_categories} layout="vertical">
-              <XAxis type="number" stroke="#64748b" allowDecimals={false} />
+              <XAxis type="number" stroke="#A8A29E" allowDecimals={false} />
               <YAxis
                 type="category"
                 dataKey="category"
-                stroke="#64748b"
+                stroke="#A8A29E"
                 width={120}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 12, fill: "#78716C" }}
               />
-              <Tooltip cursor={{ fill: "#ffffff10" }} content={<ChartTooltip />} />
-              <Bar dataKey="count" fill="#5b8cff" radius={[0, 4, 4, 0]} />
+              <Tooltip cursor={{ fill: "#F5F5F4" }} content={<ChartTooltip />} />
+              <Bar dataKey="count" fill="#D97706" radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -127,10 +125,10 @@ function Stat({
 }) {
   return (
     <div className="card card-hover rise" style={{ animationDelay: `${delay}ms` }}>
-      {/* a thin colored accent bar on top of each stat */}
+      {/* Thin colored accent bar on top */}
       <div className="mb-3 h-1 w-10 rounded-full" style={{ background: color }} />
-      <div className="text-4xl font-semibold text-white">{value}</div>
-      <div className="mt-1 text-sm text-slate-400">{label}</div>
+      <div className="text-4xl font-bold text-stone-900">{value}</div>
+      <div className="mt-1 text-sm text-stone-500">{label}</div>
     </div>
   );
 }
@@ -139,10 +137,10 @@ function Legend({ data }: { data: { name: string; value: number }[] }) {
   return (
     <div className="mt-4 flex justify-center gap-5 text-sm">
       {data.map((d) => (
-        <span key={d.name} className="flex items-center gap-1.5 text-slate-400">
+        <span key={d.name} className="flex items-center gap-1.5 text-stone-500">
           <span
             className="h-2.5 w-2.5 rounded-full"
-            style={{ background: SENTIMENT_COLORS[d.name] ?? "#64748b" }}
+            style={{ background: SENTIMENT_COLORS[d.name] ?? "#D4D4D4" }}
           />
           {d.name}
         </span>
