@@ -76,6 +76,13 @@ export const api = {
       body: JSON.stringify({ review }),
     }),
 
+  // Add many reviews at once. Ids must be unique - the caller assigns them.
+  bulkAnalyze: (reviews: { id: number; review: string }[]) =>
+    request<Review[]>("/bulk-analyze", {
+      method: "POST",
+      body: JSON.stringify({ reviews }),
+    }),
+
   // Delete a user-added review. Seed reviews are protected server-side (403).
   deleteReview: (id: number) =>
     request<void>(`/reviews/${id}`, { method: "DELETE" }),

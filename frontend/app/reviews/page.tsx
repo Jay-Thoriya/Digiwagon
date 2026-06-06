@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api, Review } from "@/lib/api";
 import { ErrorBox, PageHeader, SentimentBadge } from "@/components/ui";
 import AddReview from "@/components/AddReview";
+import UploadReviews from "@/components/UploadReviews";
 
 const CATEGORIES = [
   "product_quality",
@@ -49,6 +50,10 @@ export default function ReviewsPage() {
 
       <div className="rise" style={{ animationDelay: "60ms" }}>
         <AddReview onAdded={() => setRefreshKey((k) => k + 1)} />
+      </div>
+
+      <div className="rise" style={{ animationDelay: "100ms" }}>
+        <UploadReviews onUploaded={() => setRefreshKey((k) => k + 1)} />
       </div>
 
       <div className="flex flex-wrap gap-3">
