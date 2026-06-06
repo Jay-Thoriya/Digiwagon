@@ -16,12 +16,18 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.models import Review
 from app.services.embeddings import embedder
-from app.services.llm import LLMError, chat
+from app.services.llm import LLMError, chat, chat_json
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
 EMBED_DIM = 384  # all-MiniLM-L6-v2
+
+VALID_SENTIMENTS = {"positive", "negative", "neutral"}
+VALID_CATEGORIES = {
+    "product_quality", "delivery", "packaging",
+    "price", "customer_support", "usability",
+}
 
 
 class ReviewIndex:
@@ -73,7 +79,7 @@ class ReviewIndex:
 review_index = ReviewIndex()
 
 
-_PROMPT = (
+_ANSWER_PROMPT = (
     "You are a review analyst. Answer the user's question using ONLY the "
     "reviews provided below. If the reviews do not contain the answer, say "
     "you don't have enough information. Be concise and cite review ids like "
@@ -81,30 +87,111 @@ _PROMPT = (
     "Reviews:\n{context}\n\nQuestion: {query}"
 )
 
+def _build_parse_prompt(query: str) -> str:
+    """Compose the parser prompt. f-string keeps literal JSON braces intact."""
+    cats = sorted(VALID_CATEGORIES)
+    return (
+        "Parse a customer-review search query into structured filters. Return "
+        "STRICT JSON with exactly these keys:\n"
+        '  "sentiment": one of "positive" | "negative" | "neutral" | null  '
+        "(null if no sentiment is requested)\n"
+        f'  "categories": array containing any of {cats} (empty array if none apply)\n'
+        '  "semantic_query": a short search phrase suitable for semantic '
+        "similarity search over review text, or empty string if the user only "
+        "wants a filter (e.g. 'show me all negative reviews').\n\n"
+        "Examples:\n"
+        '  "show me bad reviews" -> {"sentiment":"negative","categories":[],"semantic_query":""}\n'
+        '  "any delivery delays?" -> {"sentiment":null,"categories":["delivery"],"semantic_query":"delivery was delayed or shipping was slow"}\n'
+        '  "what do customers love?" -> {"sentiment":"positive","categories":[],"semantic_query":"positive customer feedback"}\n'
+        '  "is the price good?" -> {"sentiment":null,"categories":["price"],"semantic_query":"value for money and pricing"}\n\n'
+        f'Query: "{query}"'
+    )
+
+
+def _parse_query(query: str) -> dict:
+    """Ask the LLM to split a natural-language query into filters + a search phrase.
+
+    Falls back to a plain semantic search of the raw query if the LLM call
+    fails or returns malformed JSON.
+    """
+    try:
+        result = chat_json([{"role": "user", "content": _build_parse_prompt(query)}])
+        sentiment = result.get("sentiment")
+        if sentiment not in VALID_SENTIMENTS:
+            sentiment = None
+        categories = [c for c in (result.get("categories") or []) if c in VALID_CATEGORIES]
+        return {
+            "sentiment": sentiment,
+            "categories": categories,
+            "semantic_query": (result.get("semantic_query") or "").strip(),
+        }
+    except (LLMError, KeyError, TypeError, ValueError) as exc:
+        logger.info("Query parse failed (%s) - falling back to raw semantic search", exc)
+        return {"sentiment": None, "categories": [], "semantic_query": query}
+
+
+def _rank_by_similarity(query: str, candidates: list[Review]) -> list[tuple[Review, float]]:
+    """Cosine-rank a candidate list against a query. Returns [(review, score), ...]."""
+    if not candidates or not query:
+        return []
+    cand_vecs = embedder.encode([r.review for r in candidates])
+    faiss.normalize_L2(cand_vecs)
+    query_vec = embedder.encode([query])
+    faiss.normalize_L2(query_vec)
+    scores = (cand_vecs @ query_vec.T).flatten()
+    return sorted(zip(candidates, scores.tolist()), key=lambda x: x[1], reverse=True)
+
+
+def _empty_result() -> dict:
+    return {
+        "answer": "No relevant reviews were found for this query.",
+        "source_review_ids": [],
+        "retrieved_reviews": [],
+    }
+
 
 def semantic_search(db: Session, query: str) -> dict:
-    hits = review_index.search(query, settings.retrieval_top_k)
-    relevant = [(rid, score) for rid, score in hits if score >= settings.retrieval_threshold]
+    parsed = _parse_query(query)
+    logger.info(
+        "search parse: sentiment=%s categories=%s semantic=%r",
+        parsed["sentiment"], parsed["categories"], parsed["semantic_query"],
+    )
 
-    if not relevant:
-        return {
-            "answer": "No relevant reviews were found for this query.",
-            "source_review_ids": [],
-            "retrieved_reviews": [],
-        }
+    # 1. Narrow the candidate set by any structured filters the LLM extracted.
+    q = db.query(Review)
+    if parsed["sentiment"]:
+        q = q.filter(Review.sentiment == parsed["sentiment"])
+    candidates = q.all()
+    if parsed["categories"]:
+        wanted = set(parsed["categories"])
+        candidates = [r for r in candidates if wanted & set(r.categories or [])]
 
-    ids = [rid for rid, _ in relevant]
-    rows = db.query(Review).filter(Review.id.in_(ids)).all()
-    by_id = {r.id: r for r in rows}
-    ordered = [by_id[rid] for rid in ids if rid in by_id]
+    if not candidates:
+        return _empty_result()
 
+    # 2. Decide how to pick the final set.
+    has_filter = bool(parsed["sentiment"] or parsed["categories"])
+    if parsed["semantic_query"] and has_filter:
+        # Filter already narrowed the set - use similarity just to rank, no threshold.
+        ranked = _rank_by_similarity(parsed["semantic_query"], candidates)
+        ordered = [r for r, _ in ranked[:settings.retrieval_top_k]]
+    elif parsed["semantic_query"]:
+        # Pure semantic search - apply threshold to guard against weak matches.
+        ranked = _rank_by_similarity(parsed["semantic_query"], candidates)
+        above = [(r, s) for r, s in ranked if s >= settings.retrieval_threshold]
+        ordered = [r for r, _ in above[:settings.retrieval_top_k]]
+        if not ordered:
+            return _empty_result()
+    else:
+        # Pure filter query (e.g. "show me bad reviews") - keep all matches.
+        ordered = candidates[:settings.retrieval_top_k]
+
+    # 3. Ask the LLM to compose a grounded answer over the retrieved set.
     context = "\n".join(f"(review {r.id}) {r.review}" for r in ordered)
-    messages = [{"role": "user", "content": _PROMPT.format(context=context, query=query)}]
-
+    messages = [{"role": "user", "content": _ANSWER_PROMPT.format(context=context, query=query)}]
     try:
         answer = chat(messages).strip()
     except LLMError as exc:
-        # Degrade gracefully: still return the retrieved reviews.
         logger.warning("LLM answer generation failed: %s", exc)
         answer = "Could not generate an answer right now, but here are the most relevant reviews."
 
